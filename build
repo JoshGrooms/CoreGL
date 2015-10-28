@@ -1,0 +1,21 @@
+#!/bin/bash
+
+# BUILD - Compiles the C-language testing program that was written to demonstrate the OpenGL loading library.
+#
+#       Either this Bash script or the CMakeLists.txt can be used to build the testing program.
+
+# CHANGELOG
+# Written by Josh Grooms on 20151025
+
+
+
+python ./PurityGL.py
+
+gcc \
+    ./TestPureGL.c \
+    ./Generated/OpenGL.c \
+    -Wall \
+    -lglut \
+    -lGL \
+    -ldl \
+    -o PurityGL

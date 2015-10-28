@@ -1,0 +1,73 @@
+#include "OpenGL.h"
+#include <dlfcn.h>
+#include <GL/glx.h>
+#include <stdio.h>
+
+
+
+/** PRIVATE DATA & UTILITIES **/
+static void* LibraryHandle;
+static void bindPointers();
+
+
+
+/** PUBLIC API FUNCTIONS **/
+int glLoadFunctions()
+{{
+    LibraryHandle = dlopen("libGL.so.1", RTLD_LAZY | RTLD_GLOBAL);
+
+    if (!LibraryHandle)
+    {{
+        fprintf(stderr, "The OpenGL library libGL.so.1 could not be opened.");
+        return 0;
+    }}
+
+    bindPointers();
+    dlclose(LibraryHandle);
+
+    if (!glIsSupported(3, 2))
+    {{
+        fprintf(stderr, "The supported major version of OpenGL is less than 3.2.\n");
+        return 0;
+    }}
+
+    return 1;
+}}
+
+OpenGLFunctionPointer glGetFunctionPointer(const char* name)
+{{
+    OpenGLFunctionPointer funPtr = (OpenGLFunctionPointer)glXGetProcAddress((GLubyte*)name);
+    if (!funPtr)
+        funPtr = (OpenGLFunctionPointer)dlsym(LibraryHandle, name);
+
+    return funPtr;
+}}
+
+int glIsSupported(int major, int minor)
+{{
+    if (!glGetIntegerv)
+    {{
+        fprintf(stderr, "Could not find the OpenGL API function glGetIntegerv.\n");
+        return 0;
+    }}
+
+    if (major < 3)
+        return 0;
+
+    int majorSupported, minorSupported;
+    glGetIntegerv(GL_MAJOR_VERSION, &majorSupported);
+    glGetIntegerv(GL_MINOR_VERSION, &minorSupported);
+
+    if (majorSupported < 3)
+        return 0;
+
+    return (majorSupported > major) || (majorSupported == major && minorSupported >= minor);
+}}
+
+
+{SourceFunctionDeclarations}
+
+static void bindPointers()
+{{
+{SourceFunctionValues}
+}}
