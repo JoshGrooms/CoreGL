@@ -58,6 +58,8 @@ int glIsSupported(int major, int minor)
     glGetIntegerv(GL_MAJOR_VERSION, &majorSupported);
     glGetIntegerv(GL_MINOR_VERSION, &minorSupported);
 
+    printf("Supported OpenGL Version:   %d.%d\n", majorSupported, minorSupported);
+
     if (majorSupported < 3)
         return 0;
 
