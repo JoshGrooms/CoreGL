@@ -12,7 +12,7 @@
 python ./PurityGL.py
 
 gcc \
-    ./TestPureGL.c \
+    ./TestPurityGL.c \
     ./Generated/OpenGL.c \
     -Wall \
     -lglut \
