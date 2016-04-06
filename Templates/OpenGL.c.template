@@ -54,7 +54,7 @@ int glIsSupported(int major, int minor)
     if (major < 3)
         return 0;
 
-    int majorSupported, minorSupported = 0;
+    int majorSupported = 0, minorSupported = 0;
     glGetIntegerv(GL_MAJOR_VERSION, &majorSupported);
     glGetIntegerv(GL_MINOR_VERSION, &minorSupported);
 
