@@ -24,13 +24,6 @@ int glLoadFunctions()
 
     bindPointers();
     dlclose(LibraryHandle);
-
-    if (!glIsSupported(3, 2))
-    {{
-        fprintf(stderr, "The supported major version of OpenGL is less than 3.2.\n");
-        return 0;
-    }}
-
     return 1;
 }}
 
