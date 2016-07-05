@@ -1,0 +1,66 @@
+#include "OpenGL.h"
+#include "Windows.h"
+#include <stdio.h>
+
+
+
+/** PRIVATE DATA & UTILITIES **/
+static HINSTANCE LibraryHandle;
+static void bindPointers();
+
+
+
+/** PUBLIC API FUNCTIONS **/
+int glLoadFunctions()
+{{
+	LibraryHandle = LoadLibrary("opengl32.dll");
+    if (!LibraryHandle)
+    {{
+        fprintf(stderr, "The OpenGL library opengl32.dll could not be opened.");
+        return 0;
+    }}
+
+    bindPointers();
+	FreeLibrary(LibraryHandle);
+    return 1;
+}}
+
+OpenGLFunctionPointer glGetFunctionPointer(const char* name)
+{{
+	OpenGLFunctionPointer funPtr = (OpenGLFunctionPointer)wglGetProcAddress();
+    if (!funPtr)
+		funPtr = (OpenGLFunctionPointer)GetProcAddress(LibraryHandle, name);
+
+    return funPtr;
+}}
+
+int glIsSupported(int major, int minor)
+{{
+    if (!glGetIntegerv)
+    {{
+        fprintf(stderr, "Could not find the OpenGL API function glGetIntegerv.\n");
+        return 0;
+    }}
+
+    if (major < 3)
+        return 0;
+
+    int majorSupported = 0, minorSupported = 0;
+    glGetIntegerv(GL_MAJOR_VERSION, &majorSupported);
+    glGetIntegerv(GL_MINOR_VERSION, &minorSupported);
+
+    printf("Supported OpenGL Version:   %d.%d\n", majorSupported, minorSupported);
+
+    if (majorSupported < 3)
+        return 0;
+
+    return (majorSupported > major) || (majorSupported == major && minorSupported >= minor);
+}}
+
+
+{SourceFunctionDeclarations}
+
+static void bindPointers()
+{{
+{SourceFunctionValues}
+}}

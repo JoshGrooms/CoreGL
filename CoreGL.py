@@ -1,14 +1,20 @@
-#!/usr/bin/python
+#!/usr/bin/python3.5
 
 # CHANGELOG
 # Written by Josh Grooms on 20151023
+#   20160705 - Updated this script for cross-platform usage (i.e. on Windows & Linux) and to utilize Python 3.5 instead of
+#              Python 2 functions.
 
 import argparse
 import os
+import platform
 import re
 import sys
-import urllib2
+import urllib.request
 
+
+
+## DOCUMENTATION ##
 def Help():
     return """
     COREGL - A simple Python script that loads a pure OpenGL Core API profile for use in C or C++ programs.
@@ -27,24 +33,35 @@ def Help():
                         'OpenGL.h' files that can be used in C/C++ projects can be found.
                         DEFAULT: ./Generated
 
-        -h, --help:     Display this documentation in the console.
+        -h, --help:     Display the documentation for this script (i.e. what you're currently reading) in the console window.
+
+        --platform:     The name of the operating system or platform on which OpenGL development will occur. This option
+                        controls the versions of the templates used to generate the C/C++ function loading code. By default,
+                        this script chooses templates by querying the underlying platform name at runtime, but this behavior
+                        can be overridden through this argument.
+                        DEFAULT: platform.system()
+                        OPTIONS:
+                            Linux
+                            Windows
 
         --source:       The full or relative path to an OpenGL Core Profile header.
                         DEFAULT: /usr/include/GL/glcorearb.h
     """
 
 
+
 ## SCRIPT VARIABLES ##
 # Private
-AppDir = os.path.dirname(os.path.realpath(__file__))
-TemplateDir = AppDir + '/Templates'
+AppDir              = os.path.dirname(os.path.realpath(__file__))
+TemplateDir         = AppDir + os.path.sep + 'Templates'
 HeaderTemplateName  = 'OpenGL.h'
 SourceTemplateName  = 'OpenGL.c'
 
 # Publically modifiable (via input arguments)
-InstallDestination  = AppDir + '/Generated'
+InstallDestination  = AppDir + os.path.sep + 'Generated'
 OpenGLHeaderPath    = '/usr/include/GL/glcorearb.h'
 OpenGLHeaderURL     = 'https://www.opengl.org/registry/api/GL/glcorearb.h'
+PlatformName        = platform.system()
 
 
 
@@ -119,7 +136,7 @@ def CreateLoadingCode(glHeaderContent):
         srcValues:          STRING
 
     INPUT:
-        glHeaderContent:    STRING
+        glHeaderContent:    STRING[]
                             The entire content of a 'glcorearb.h' (or other OpenGL header) file as a single string. This
                             string may be obtained from either a downloaded file (from the OpenGL website) or from a file
                             that resides on the computer.
@@ -130,7 +147,7 @@ def CreateLoadingCode(glHeaderContent):
     maxFunNameLength = 0
     rxp = re.compile(r'^GLAPI(.*)APIENTRY\s+(\w+)\s*(\(.*\));$')
     for line in glHeaderContent.splitlines():
-        m = rxp.match(line)
+        m = rxp.match(str(line))
         if m:
             outArg = m.group(1)
             funName = m.group(2)
@@ -139,7 +156,7 @@ def CreateLoadingCode(glHeaderContent):
             maxFunNameLength = max(maxFunNameLength, len(funName))
             funSignatures.append((outArg, funName, inArgs))
 
-    rightAlign = maxFunNameLength + 5
+    rightAlign = maxFunNameLength + 4
     funSignatures.sort(key = lambda x: x[1])
 
     hdrDeclarations = []
@@ -203,22 +220,29 @@ def Execute(opts):
                 of this script for possible field names.
     '''
 
-    AssertHeaderExistence(opts.OpenGLHeaderPath)
-    glAPI = ReadFile(opts.OpenGLHeaderPath)
+    if not os.path.exists(opts.InstallDestination):
+        os.makedirs(opts.InstallDestination)
 
-    hdrCode = ReadFile(TemplateDir + '/' + HeaderTemplateName + '.template')
-    srcCode = ReadFile(TemplateDir + '/' + SourceTemplateName + '.template')
+    if os.path.exists(opts.OpenGLHeaderPath):
+        print("Found glcorearb.h at: {0}".format(opts.OpenGLHeaderPath))
+        glAPI = ReadFile(opts.OpenGLHeaderPath + os.path.sep + "glcorearb.h")
+    else:
+        print("Could not locate a local copy of the OpenGL Core Profile header at: {0}".format(opts.OpenGLHeaderPath))
+        print("Downloading a copy of the header file from: {0}".format(opts.OpenGLHeaderURL))
+        glAPI = ReadURL(OpenGLHeaderURL)
+        WriteFile(InstallDestination + os.path.sep + 'glcorearb.h', glAPI)
+        print("glcorearb.h header file can be found at: {0}".format(opts.InstallDestination))
+
+    hdrCode = ReadFile(TemplateDir + os.path.sep + HeaderTemplateName + '.' + PlatformName.lower())
+    srcCode = ReadFile(TemplateDir + os.path.sep + SourceTemplateName + '.' + PlatformName.lower())
 
     hdrDecl, hdrMacro, srcDecl, srcVal = CreateLoadingCode(glAPI)
 
     hdrCode = hdrCode.format(HeaderFunctionDeclarations = hdrDecl, HeaderMacroDefinitions = hdrMacro)
     srcCode = srcCode.format(SourceFunctionDeclarations = srcDecl, SourceFunctionValues = srcVal)
 
-    if not os.path.exists(opts.InstallDestination):
-        os.makedirs(opts.InstallDestination)
-
-    dstHeader = opts.InstallDestination + '/' + HeaderTemplateName
-    dstSource = opts.InstallDestination + '/' + SourceTemplateName
+    dstHeader = opts.InstallDestination + os.path.sep + HeaderTemplateName
+    dstSource = opts.InstallDestination + os.path.sep + SourceTemplateName
 
     WriteFile(dstHeader, hdrCode)
     WriteFile(dstSource, srcCode)
@@ -238,7 +262,9 @@ def ReadURL(url):
     '''
     READURL - Reads the contents of an Internet website at the string 'url' and returns them as a single string.
     '''
-    return urllib2.urlopen(url).read()
+    with urllib.request.urlopen(url) as response:
+        text = response.read().decode('utf-8')
+    return text
 
 def WriteFile(filePath, text):
     '''
@@ -257,7 +283,7 @@ def WriteFile(filePath, text):
                     A string of text that will be written to the designated file.
     '''
     with open(filePath, 'wb') as file:
-        file.write(text)
+        file.write(bytes(text, 'utf-8'))
 
 
 
@@ -268,7 +294,9 @@ if __name__ == "__main__":
     optParser.add_argument('-h', action = 'store_true', dest = 'DisplayHelp')
     optParser.add_argument('--help', action = 'store_true', dest = 'DisplayHelp')
     optParser.add_argument('--destination', action = 'store', dest = 'InstallDestination')
+    optParser.add_argument('--platform', action = 'store', dest = 'PlatformName')
     optParser.add_argument('--source', action = 'store', dest = 'OpenGLHeaderPath')
+    optParser.add_argument('--url', action = 'store', dest = 'OpenGLHeaderURL')
     opts = optParser.parse_args()
 
     if opts.DisplayHelp:
@@ -279,5 +307,9 @@ if __name__ == "__main__":
         opts.InstallDestination = InstallDestination
     if not opts.OpenGLHeaderPath:
         opts.OpenGLHeaderPath = OpenGLHeaderPath
+    if not opts.OpenGLHeaderURL:
+        opts.OpenGLHeaderURL = OpenGLHeaderURL
+    if not opts.PlatformName:
+        opts.PlatformName = PlatformName
 
     Execute(opts)

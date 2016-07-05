@@ -1,0 +1,39 @@
+/* CHANGELOG
+ * Written by Josh Grooms on 20151024
+ */
+
+
+#ifndef LoadOpenGLHeaderGuard
+    #define LoadOpenGLHeaderGuard
+
+    #include <GL/glcorearb.h>
+
+    #ifndef __gl_h_
+        #define __gl_h_
+    #endif
+
+
+
+    /** OPENGL API FUNCTIONS **/
+    #ifdef __cplusplus
+        extern "C"
+        {{
+    #endif
+
+            /** PUBLIC API FUNCTIONS **/
+            typedef void (*OpenGLFunctionPointer)(void);
+            int glLoadFunctions();
+            int glIsSupported(int major, int minor);
+            OpenGLFunctionPointer glGetFunctionPointer(const char* name);
+
+            
+
+{HeaderFunctionDeclarations}
+
+{HeaderMacroDefinitions}
+
+    #ifdef __cplusplus
+        }}
+    #endif
+
+#endif
