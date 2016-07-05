@@ -9,13 +9,13 @@
 
 
 
-python ./PurityGL.py
+python ./CoreGL.py
 
 gcc \
-    ./TestPurityGL.c \
+    ./TestCoreGL.c \
     ./Generated/OpenGL.c \
     -Wall \
     -lglut \
     -lGL \
     -ldl \
-    -o PurityGL
+    -o CoreGL

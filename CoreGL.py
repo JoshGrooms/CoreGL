@@ -11,7 +11,7 @@ import urllib2
 
 def Help():
     return """
-    PURITYGL - A simple Python script that loads a pure OpenGL Core API profile for use in C or C++ programs.
+    COREGL - A simple Python script that loads a pure OpenGL Core API profile for use in C or C++ programs.
 
         Running this script will generate two new files called 'OpenGL.c' and 'OpenGL.h' that can be imported into any C or
         C++ program being developed by the user. Doing so affords easy access to functions from the OpenGL Core Profile
@@ -19,8 +19,8 @@ def Help():
         Linux or 'wglGetProcAddress' on Windows).
 
     SYNTAX:
-        PurityGL
-        PurityGL options
+        CoreGL
+        CoreGL options
 
     OPTIONS:
         --destination:  The path to which all newly generated files will be written. This is where the 'OpenGL.c' and
@@ -71,7 +71,7 @@ def CreateHeaderDeclaration(funName, space):
                     The number of individual spaces between the type and the variable name for this declaration. This is used
                     to neatly align the generated text in order to improve readability.
     '''
-    return '\t\t\textern PFN{0}PROC{1}{2};'.format(funName.upper(), ' ' * space, '_pglptr_' + funName)
+    return '\t\t\textern PFN{0}PROC{1}{2};'.format(funName.upper(), ' ' * space, '_cglptr_' + funName)
 
 def CreateHeaderMacro(funName, space):
     '''
@@ -79,9 +79,9 @@ def CreateHeaderMacro(funName, space):
 
         This function creates macro definitions that alias the internally used OpenGL function pointer names. This allows C
         or C++ programs using the generated files to call API functions as if they possessed their originally defined names
-        (e.g. 'glCreateTextures' instead of '_pglptr_glCreateTextures').
+        (e.g. 'glCreateTextures' instead of '_cglptr_glCreateTextures').
 
-        Without these, we would be forced to call function pointers whose names are prepended with a '_pglptr_' decoration
+        Without these, we would be forced to call function pointers whose names are prepended with a '_cglptr_' decoration
         (or something else unique) because some OpenGL functions are loaded independently by other commonly used libraries.
         If this were to occur and we tried to re-define those function pointers within the files generated here, segmentation
         faults would be observed at runtime.
@@ -100,7 +100,7 @@ def CreateHeaderMacro(funName, space):
                     The number of individual spaces between the macro name and the function pointer to which it refers. This
                     is used to neatly align the generated text in order to improve readability.
     '''
-    return '\t\t\t#define {0}{1}{2}'.format(funName, ' ' * (space + 6), '_pglptr_' + funName)
+    return '\t\t\t#define {0}{1}{2}'.format(funName, ' ' * (space + 6), '_cglptr_' + funName)
 
 def CreateLoadingCode(glHeaderContent):
     '''
@@ -184,13 +184,13 @@ def CreateSourceDeclaration(funName, space):
                     The number of individual spaces between the type and the variable name for this declaration. This is used
                     to neatly align the generated text in order to improve readability.
     '''
-    return 'PFN{0}PROC{1}{2} = NULL;'.format(funName.upper(), ' ' * space, '_pglptr_' + funName)
+    return 'PFN{0}PROC{1}{2} = NULL;'.format(funName.upper(), ' ' * space, '_cglptr_' + funName)
 
 def CreateSourceValue(funName, space):
     '''
     CREATESOURCEVALUE - Creates a line of code that fills in the values for OpenGL API function pointer declarations.
     '''
-    return '\t{0}{1}= (PFN{2}PROC)glGetFunctionPointer("{3}");'.format('_pglptr_' + funName, ' ' * space, funName.upper(), funName)
+    return '\t{0}{1}= (PFN{2}PROC)glGetFunctionPointer("{3}");'.format('_cglptr_' + funName, ' ' * space, funName.upper(), funName)
 
 def Execute(opts):
     '''
