@@ -66,11 +66,6 @@ PlatformName        = platform.system()
 
 
 ## PRIVATE UTILITY FUNCTIONS
-def AssertHeaderExistence(glHeaderPath):
-    if not os.path.exists(glHeaderPath):
-        print("ERROR: Could not find the OpenGL API header file {0}. Ensure that this file exists at the specified path before running this program.", glHeaderPath)
-        sys.exit(0)
-
 def CreateHeaderDeclaration(funName, space):
     '''
     CREATEHEADERDECLARATION - Creates an OpenGL API function declaration string in the header that this program generates.
