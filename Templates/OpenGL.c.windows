@@ -13,7 +13,7 @@ static void bindPointers();
 /** PUBLIC API FUNCTIONS **/
 int glLoadFunctions()
 {{
-	LibraryHandle = LoadLibrary("opengl32.dll");
+	LibraryHandle = LoadLibrary(L"opengl32.dll");
     if (!LibraryHandle)
     {{
         fprintf(stderr, "The OpenGL library opengl32.dll could not be opened.");
@@ -27,7 +27,7 @@ int glLoadFunctions()
 
 OpenGLFunctionPointer glGetFunctionPointer(const char* name)
 {{
-	OpenGLFunctionPointer funPtr = (OpenGLFunctionPointer)wglGetProcAddress();
+	OpenGLFunctionPointer funPtr = (OpenGLFunctionPointer)wglGetProcAddress(name);
     if (!funPtr)
 		funPtr = (OpenGLFunctionPointer)GetProcAddress(LibraryHandle, name);
 
