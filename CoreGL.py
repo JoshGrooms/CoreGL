@@ -53,15 +53,21 @@ def Help():
 ## SCRIPT VARIABLES ##
 # Private
 AppDir              = os.path.dirname(os.path.realpath(__file__))
-TemplateDir         = AppDir + os.path.sep + 'Templates'
 HeaderTemplateName  = 'OpenGL.h'
+TemplateDir         = AppDir + os.path.sep + 'Templates'
+OpenGLURL           = 'https://www.opengl.org/registry/api/GL/'
 SourceTemplateName  = 'OpenGL.c'
 
 # Publically modifiable (via input arguments)
-InstallDestination  = AppDir + os.path.sep + 'Generated'
-OpenGLHeaderPath    = '/usr/include/GL/glcorearb.h'
-OpenGLHeaderURL     = 'https://www.opengl.org/registry/api/GL/glcorearb.h'
-PlatformName        = platform.system()
+PlatformName            = platform.system()
+PlatformHeader          = 'glxext.h' if PlatformName is 'Linux' else 'wglext.h'
+
+InstallDestination      = AppDir + os.path.sep + 'GL'
+OpenGLExtensionURL      = OpenGLURL + 'glext.h'
+OpenGLHeaderPath        = '/usr/include/GL/glcorearb.h'
+OpenGLHeaderURL         = OpenGLURL + 'glcorearb.h'
+OpenGLPlatformURL       = OpenGLURL + PlatformHeader
+
 
 
 
@@ -227,6 +233,14 @@ def Execute(opts):
         glAPI = ReadURL(OpenGLHeaderURL)
         WriteFile(InstallDestination + os.path.sep + 'glcorearb.h', glAPI)
         print("glcorearb.h header file can be found at: {0}".format(opts.InstallDestination))
+
+        platformHeader = ReadURL(OpenGLPlatformURL)
+        WriteFile(InstallDestination + os.path.sep + PlatformHeader, platformHeader);
+
+        extensionHeader = ReadURL(OpenGLExtensionURL)
+        WriteFile(InstallDestination + os.path.sep + 'glext.h', extensionHeader);
+
+
 
     hdrCode = ReadFile(TemplateDir + os.path.sep + HeaderTemplateName + '.' + PlatformName.lower())
     srcCode = ReadFile(TemplateDir + os.path.sep + SourceTemplateName + '.' + PlatformName.lower())
