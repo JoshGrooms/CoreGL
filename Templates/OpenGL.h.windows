@@ -7,6 +7,7 @@
     #define LoadOpenGLHeaderGuard
 
     #include <GL/glcorearb.h>
+    #include <GL/OpenGLAPI.h>
 
     #ifndef __gl_h_
         #define __gl_h_
@@ -22,9 +23,9 @@
 
             /** PUBLIC API FUNCTIONS **/
             typedef void (*OpenGLFunctionPointer)(void);
-            int glLoadFunctions();
-            int glIsSupported(int major, int minor);
-            OpenGLFunctionPointer glGetFunctionPointer(const char* name);
+            OpenGLAPI int glLoadFunctions();
+            OpenGLAPI int glIsSupported(int major, int minor);
+            OpenGLAPI OpenGLFunctionPointer glGetFunctionPointer(const char* name);
 
             
 

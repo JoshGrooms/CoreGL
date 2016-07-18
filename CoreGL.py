@@ -4,11 +4,14 @@
 # Written by Josh Grooms on 20151023
 #   20160705 - Updated this script for cross-platform usage (i.e. on Windows & Linux) and to utilize Python 3.5 instead of
 #              Python 2 functions.
+#   20160717 - Added in a library export header that automatically gets copied over to the install destination folder. This 
+#              is useful especially for Windows compilations, which require explicit importing/exporting of DLL code.
 
 import argparse
 import os
 import platform
 import re
+import shutil
 import sys
 import urllib.request
 
@@ -52,11 +55,12 @@ def Help():
 
 ## SCRIPT VARIABLES ##
 # Private
-AppDir              = os.path.dirname(os.path.realpath(__file__))
-HeaderTemplateName  = 'OpenGL.h'
-TemplateDir         = AppDir + os.path.sep + 'Templates'
-OpenGLURL           = 'https://www.opengl.org/registry/api/GL/'
-SourceTemplateName  = 'OpenGL.c'
+AppDir                  = os.path.dirname(os.path.realpath(__file__))
+HeaderTemplateName      = 'OpenGL.h'
+TemplateDir             = AppDir + os.path.sep + 'Templates'
+OpenGLAPIHeaderName     = 'OpenGLAPI.h'
+OpenGLURL               = 'https://www.opengl.org/registry/api/GL/'
+SourceTemplateName      = 'OpenGL.c'
 
 # Publically modifiable (via input arguments)
 PlatformName            = platform.system()
@@ -89,7 +93,7 @@ def CreateHeaderDeclaration(funName, space):
                     The number of individual spaces between the type and the variable name for this declaration. This is used
                     to neatly align the generated text in order to improve readability.
     '''
-    return '\t\t\textern PFN{0}PROC{1}{2};'.format(funName.upper(), ' ' * space, '_cglptr_' + funName)
+    return '\t\t\tOpenGLAPI extern PFN{0}PROC{1}{2};'.format(funName.upper(), ' ' * space, '_cglptr_' + funName)
 
 def CreateHeaderMacro(funName, space):
     '''
@@ -237,10 +241,10 @@ def Execute(opts):
         platformHeader = ReadURL(OpenGLPlatformURL)
         WriteFile(InstallDestination + os.path.sep + PlatformHeader, platformHeader);
 
+        shutil.copyfile(TemplateDir + os.path.sep + OpenGLAPIHeaderName, InstallDestination + os.path.sep + OpenGLAPIHeaderName) 
+
         extensionHeader = ReadURL(OpenGLExtensionURL)
         WriteFile(InstallDestination + os.path.sep + 'glext.h', extensionHeader);
-
-
 
     hdrCode = ReadFile(TemplateDir + os.path.sep + HeaderTemplateName + '.' + PlatformName.lower())
     srcCode = ReadFile(TemplateDir + os.path.sep + SourceTemplateName + '.' + PlatformName.lower())
