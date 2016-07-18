@@ -32,6 +32,7 @@
     <Content Include="Templates\OpenGL.c.windows" />
     <Content Include="Templates\OpenGL.h.linux" />
     <Content Include="Templates\OpenGL.h.windows" />
+    <Content Include="Templates\OpenGLAPI.h" />
   </ItemGroup>
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
