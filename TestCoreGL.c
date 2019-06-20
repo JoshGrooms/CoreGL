@@ -2,7 +2,7 @@
  * Written by Josh Grooms on 20151025
  */
 
-#include "Generated/OpenGL.h"
+#include "GL/OpenGL.h"
 
 #include <GL/glut.h>
 #include <stdbool.h>

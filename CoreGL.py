@@ -4,7 +4,7 @@
 # Written by Josh Grooms on 20151023
 #   20160705 - Updated this script for cross-platform usage (i.e. on Windows & Linux) and to utilize Python 3.5 instead of
 #              Python 2 functions.
-#   20160717 - Added in a library export header that automatically gets copied over to the install destination folder. This 
+#   20160717 - Added in a library export header that automatically gets copied over to the install destination folder. This
 #              is useful especially for Windows compilations, which require explicit importing/exporting of DLL code.
 
 import argparse
@@ -34,7 +34,7 @@ def Help():
     OPTIONS:
         --destination:  The path to which all newly generated files will be written. This is where the 'OpenGL.c' and
                         'OpenGL.h' files that can be used in C/C++ projects can be found.
-                        DEFAULT: ./Generated
+                        DEFAULT: ./GL
 
         -h, --help:     Display the documentation for this script (i.e. what you're currently reading) in the console window.
 
@@ -60,18 +60,22 @@ HeaderTemplateName      = 'OpenGL.h'
 TemplateDir             = AppDir + os.path.sep + 'Templates'
 OpenGLAPIHeaderName     = 'OpenGLAPI.h'
 OpenGLURL               = 'https://www.opengl.org/registry/api/GL/'
+PlatformURL             = 'https://www.khronos.org/registry/EGL/api/KHR/'
+PlatformHeader          = 'khrplatform.h'
 SourceTemplateName      = 'OpenGL.c'
 
 # Publically modifiable (via input arguments)
 PlatformName            = platform.system()
-PlatformHeader          = 'glxext.h' if PlatformName is 'Linux' else 'wglext.h'
+ExtensionHeader         = 'glxext.h' if PlatformName is 'Linux' else 'wglext.h'
 
-InstallDestination      = AppDir + os.path.sep + 'GL'
+InstallPath             = AppDir + os.path.sep;
+InstallGL               = InstallPath + 'GL'
+InstallKHR              = InstallPath + 'KHR'
 OpenGLExtensionURL      = OpenGLURL + 'glext.h'
 OpenGLHeaderPath        = '/usr/include/GL/glcorearb.h'
 OpenGLHeaderURL         = OpenGLURL + 'glcorearb.h'
-OpenGLPlatformURL       = OpenGLURL + PlatformHeader
-
+ExtensionFile           = OpenGLURL + ExtensionHeader
+PlatformFile            = PlatformURL + PlatformHeader
 
 
 
@@ -225,8 +229,11 @@ def Execute(opts):
                 of this script for possible field names.
     '''
 
-    if not os.path.exists(opts.InstallDestination):
-        os.makedirs(opts.InstallDestination)
+    if not os.path.exists(InstallGL):
+        os.makedirs(InstallGL)
+
+    if not os.path.exists(InstallKHR):
+        os.makedirs(InstallKHR)
 
     if os.path.exists(opts.OpenGLHeaderPath):
         print("Found glcorearb.h at: {0}".format(opts.OpenGLHeaderPath))
@@ -235,16 +242,20 @@ def Execute(opts):
         print("Could not locate a local copy of the OpenGL Core Profile header at: {0}".format(opts.OpenGLHeaderPath))
         print("Downloading a copy of the header file from: {0}".format(opts.OpenGLHeaderURL))
         glAPI = ReadURL(OpenGLHeaderURL)
-        WriteFile(InstallDestination + os.path.sep + 'glcorearb.h', glAPI)
-        print("glcorearb.h header file can be found at: {0}".format(opts.InstallDestination))
 
-        platformHeader = ReadURL(OpenGLPlatformURL)
-        WriteFile(InstallDestination + os.path.sep + PlatformHeader, platformHeader);
+        WriteFile(InstallGL + os.path.sep + 'glcorearb.h', glAPI)
+        print("glcorearb.h header file can be found at: {0}".format(InstallGL))
 
-        shutil.copyfile(TemplateDir + os.path.sep + OpenGLAPIHeaderName, InstallDestination + os.path.sep + OpenGLAPIHeaderName) 
+        extFile = ReadURL(ExtensionFile)
+        WriteFile(InstallGL + os.path.sep + ExtensionHeader, extFile);
+
+        platFile = ReadURL(PlatformURL + PlatformHeader)
+        WriteFile(InstallKHR + os.path.sep + PlatformHeader, platFile);
+
+        shutil.copyfile(TemplateDir + os.path.sep + OpenGLAPIHeaderName, InstallGL + os.path.sep + OpenGLAPIHeaderName)
 
         extensionHeader = ReadURL(OpenGLExtensionURL)
-        WriteFile(InstallDestination + os.path.sep + 'glext.h', extensionHeader);
+        WriteFile(InstallGL + os.path.sep + 'glext.h', extensionHeader);
 
     hdrCode = ReadFile(TemplateDir + os.path.sep + HeaderTemplateName + '.' + PlatformName.lower())
     srcCode = ReadFile(TemplateDir + os.path.sep + SourceTemplateName + '.' + PlatformName.lower())
@@ -254,13 +265,13 @@ def Execute(opts):
     hdrCode = hdrCode.format(HeaderFunctionDeclarations = hdrDecl, HeaderMacroDefinitions = hdrMacro)
     srcCode = srcCode.format(SourceFunctionDeclarations = srcDecl, SourceFunctionValues = srcVal)
 
-    dstHeader = opts.InstallDestination + os.path.sep + HeaderTemplateName
-    dstSource = opts.InstallDestination + os.path.sep + SourceTemplateName
+    dstHeader = InstallGL + os.path.sep + HeaderTemplateName
+    dstSource = InstallGL + os.path.sep + SourceTemplateName
 
     WriteFile(dstHeader, hdrCode)
     WriteFile(dstSource, srcCode)
 
-    print("The OpenGL library loading files were written to: {0}".format(opts.InstallDestination))
+    print("The OpenGL library loading files were written to: {0}".format(InstallGL))
 
 
 def ReadFile(filePath):
@@ -306,7 +317,7 @@ if __name__ == "__main__":
     optParser = argparse.ArgumentParser(usage = Help(), add_help = False);
     optParser.add_argument('-h', action = 'store_true', dest = 'DisplayHelp')
     optParser.add_argument('--help', action = 'store_true', dest = 'DisplayHelp')
-    optParser.add_argument('--destination', action = 'store', dest = 'InstallDestination')
+    optParser.add_argument('--destination', action = 'store', dest = 'InstallPath')
     optParser.add_argument('--platform', action = 'store', dest = 'PlatformName')
     optParser.add_argument('--source', action = 'store', dest = 'OpenGLHeaderPath')
     optParser.add_argument('--url', action = 'store', dest = 'OpenGLHeaderURL')
@@ -316,8 +327,8 @@ if __name__ == "__main__":
         print(Help())
         sys.exit(0)
 
-    if not opts.InstallDestination:
-        opts.InstallDestination = InstallDestination
+    if not opts.InstallPath:
+        opts.InstallPath = InstallPath
     if not opts.OpenGLHeaderPath:
         opts.OpenGLHeaderPath = OpenGLHeaderPath
     if not opts.OpenGLHeaderURL:
